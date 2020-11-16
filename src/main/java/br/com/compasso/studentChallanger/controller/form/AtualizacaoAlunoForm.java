@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import br.com.compasso.studentChallanger.model.Aluno;
 import br.com.compasso.studentChallanger.model.Sexo;
 import br.com.compasso.studentChallanger.repository.AlunoRepository;
+import br.com.compasso.studentChallanger.utils.IdadeUtil;
 
 public class AtualizacaoAlunoForm {
 
@@ -65,6 +66,7 @@ public class AtualizacaoAlunoForm {
 		aluno.setTelefone(telefone);
 		aluno.setSexo(sexo);
 		aluno.setDataNascimento(dataNascimento);
+		aluno.setIdade(IdadeUtil.calculaIdade(dataNascimento));
 
 		return aluno;
 	}

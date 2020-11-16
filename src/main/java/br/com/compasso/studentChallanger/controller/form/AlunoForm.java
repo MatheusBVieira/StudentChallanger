@@ -1,8 +1,6 @@
 package br.com.compasso.studentChallanger.controller.form;
 
-import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
@@ -11,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 
 import br.com.compasso.studentChallanger.model.Aluno;
 import br.com.compasso.studentChallanger.model.Sexo;
+import br.com.compasso.studentChallanger.utils.IdadeUtil;
 
 public class AlunoForm {
 
@@ -83,47 +82,9 @@ public class AlunoForm {
 	}
 
 	public Aluno converter() {
-		Aluno aluno = new Aluno(nomeCompleto, username, email, telefone, sexo, dataNascimento, calculaIdade());
+		Aluno aluno = new Aluno(nomeCompleto, username, email, telefone, sexo, dataNascimento,
+				IdadeUtil.calculaIdade(this.getDataNascimento()));
 		return aluno;
-	}
-
-	public int calculaIdade() {
-		GregorianCalendar agora = new GregorianCalendar();
-		int ano = 0, mes = 0, dia = 0;
-
-		GregorianCalendar nascimento = new GregorianCalendar();
-		int anoNasc = 0, mesNasc = 0, diaNasc = 0;
-
-		int idade = 0;
-
-		if (this.getDataNascimento() != null) {
-			nascimento.setTime(this.getDataNascimento());
-
-			ano = agora.get(Calendar.YEAR);
-			mes = agora.get(Calendar.MONTH) + 1;
-			dia = agora.get(Calendar.DAY_OF_MONTH);
-
-			anoNasc = nascimento.get(Calendar.YEAR);
-			mesNasc = nascimento.get(Calendar.MONTH) + 1;
-			diaNasc = nascimento.get(Calendar.DAY_OF_MONTH);
-
-			idade = ano - anoNasc;
-
-			if (mes < mesNasc) {
-				idade--;
-			} else {
-				if (dia < diaNasc) {
-					idade--;
-				}
-			}
-
-			if (idade < 0) {
-				idade = 0;
-			}
-
-		}
-
-		return (idade);
 	}
 
 }
