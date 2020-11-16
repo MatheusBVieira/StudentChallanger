@@ -1,0 +1,1 @@
+INSERT INTO ALUNO(nome_completo, username, email, telefone, sexo, idade) VALUES('Matheus Bruggemann Vieira', 'nofti', 'matheusbvieira@hotmail.com', '48991466677', 'MASCULINO', '19');
