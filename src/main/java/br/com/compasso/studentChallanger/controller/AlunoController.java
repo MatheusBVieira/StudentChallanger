@@ -26,15 +26,16 @@ import org.springframework.web.util.UriComponentsBuilder;
 import br.com.compasso.studentChallanger.controller.dto.AlunoDto;
 import br.com.compasso.studentChallanger.controller.form.AlunoForm;
 import br.com.compasso.studentChallanger.controller.form.AtualizacaoAlunoForm;
+import br.com.compasso.studentChallanger.exception.IdNotFoundException;
 import br.com.compasso.studentChallanger.model.Aluno;
-import br.com.compasso.studentChallanger.repository.AlunoRepository;
+import br.com.compasso.studentChallanger.service.AlunoService;
 
 @RestController
 @RequestMapping("/aluno")
 public class AlunoController {
 
 	@Autowired
-	private AlunoRepository alunoRepository;
+	private AlunoService alunoService;
 
 	@GetMapping
 	public Page<AlunoDto> lista(@RequestParam(required = false) String nomeCompleto,
@@ -42,15 +43,12 @@ public class AlunoController {
 			@PageableDefault(sort = "nomeCompleto", direction = Direction.DESC, page = 0, size = 10) Pageable paginacao) {
 
 		if (nomeCompleto == null && username == null) {
-			Page<Aluno> alunos = alunoRepository.findAll(paginacao);
-			return AlunoDto.converter(alunos);
+			return alunoService.lista(paginacao);
 		} else {
 			if (nomeCompleto == null) {
-				Page<Aluno> alunos = alunoRepository.findByUsername(username, paginacao);
-				return AlunoDto.converter(alunos);
+				return alunoService.lista(paginacao, username);
 			} else {
-				Page<Aluno> alunos = alunoRepository.findByNomeCompleto(nomeCompleto, paginacao);
-				return AlunoDto.converter(alunos);
+				return alunoService.lista(nomeCompleto, paginacao);
 			}
 		}
 
@@ -58,9 +56,9 @@ public class AlunoController {
 
 	@GetMapping("/{id}")
 	public ResponseEntity<AlunoDto> detalhar(@PathVariable Long id) {
-		Optional<Aluno> topico = alunoRepository.findById(id);
-		if (topico.isPresent()) {
-			return ResponseEntity.ok(new AlunoDto(topico.get()));
+		Optional<Aluno> aluno = alunoService.lista(id);
+		if (aluno.isPresent()) {
+			return ResponseEntity.ok(new AlunoDto(aluno.get()));
 		}
 
 		return ResponseEntity.notFound().build();
@@ -69,34 +67,32 @@ public class AlunoController {
 	@PostMapping
 	@Transactional
 	public ResponseEntity<AlunoDto> cadastrar(@RequestBody @Valid AlunoForm form, UriComponentsBuilder uriBuilder) {
-		Aluno aluno = form.converter();
-		alunoRepository.save(aluno);
+		Aluno aluno = alunoService.insere(form);
 
-		URI uri = uriBuilder.path("/topicos/{id}").buildAndExpand(aluno.getId()).toUri();
+		URI uri = uriBuilder.path("/aluno/{id}").buildAndExpand(aluno.getId()).toUri();
 		return ResponseEntity.created(uri).body(new AlunoDto(aluno));
 	}
 
 	@PutMapping("/{id}")
 	@Transactional
 	public ResponseEntity<AlunoDto> atualizar(@PathVariable Long id, @RequestBody @Valid AtualizacaoAlunoForm form) {
-		Optional<Aluno> optional = alunoRepository.findById(id);
-		if (optional.isPresent()) {
-			Aluno aluno = form.atualizar(id, alunoRepository);
+		try {
+			Aluno aluno = alunoService.atualizar(id, form);
 			return ResponseEntity.ok(new AlunoDto(aluno));
+		} catch (IdNotFoundException e) {
+			System.out.println(e.getMessage());
+			return ResponseEntity.notFound().build();
 		}
 
-		return ResponseEntity.notFound().build();
 	}
 
 	@DeleteMapping("/{id}")
 	@Transactional
 	public ResponseEntity<?> remover(@PathVariable Long id) {
-		Optional<Aluno> optional = alunoRepository.findById(id);
-		if (optional.isPresent()) {
-			alunoRepository.deleteById(id);
+		boolean deletado = alunoService.deleta(id);
+		if (deletado) {
 			return ResponseEntity.ok().build();
 		}
-
 		return ResponseEntity.notFound().build();
 	}
 
